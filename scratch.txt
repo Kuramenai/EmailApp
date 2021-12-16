@@ -1,0 +1,15 @@
+label = QLabel("""Welcome to MyEmail!
+                  Add your account before continuing.""")
+label.show()
+
+
+#Set the Welcome Message
+        welcomeMesaage = qtw.QLabel("Welcome to MyEmail App!",self)
+        #welcomeMesaage.show()
+
+        #Set the email input line edit
+        input_email = qtw.QLineEdit(self,clearButtonEnabled = 1, placeholderText = "Please input your email here")
+        #input_email.show()
+
+        input_password = qtw.QLineEdit(self,clearButtonEnabled = 1, placeholderText = "Please input your password here")
+        #input_email.show()
