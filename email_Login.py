@@ -1,4 +1,5 @@
 import sys
+import smtplib
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
@@ -7,10 +8,6 @@ from emailMainWindow  import MainWindow
 
 
 class EmailLoginWindow(qtw.QWidget):
-
-     #将输入变量传输给主window
-    submitted_email = qtc.pyqtSignal(str)
-    submitted_password = qtc.pyqtSignal(str)
 
     def __init__(self):
         "Window when first logging into the app"
@@ -29,8 +26,6 @@ class EmailLoginWindow(qtw.QWidget):
         #self.input_password =  qtw.QLineEdit(self,clearButtonEnabled = 1,placeholderText = "Please input your password here").setEchoMode(qtw.QLineEdit.Password)
         self.input_password = PasswordEdit(self,clearButtonEnabled = 1,placeholderText = "Please input your password here" )
         
-       
-
         #flag to open main window
         self.verif_email = False
         self.verif_password = False
@@ -62,27 +57,25 @@ class EmailLoginWindow(qtw.QWidget):
 
     def openMainWindow(self):
         "Opens MainWindow"
-        self.mw = MainWindow()
-        self.submitted_password.connect(self.mw.email_label.setText)
-        self.submitted_password.connect(self.mw.password_label.setText)
-        self.mw.show()
-        #return self.mw
+        if(self.verif_email  and self.verif_password):
+            self.mw = MainWindow(self.input_email.text(),self.input_password.text())
+            self.close()
+            self.mw.show()
+            #return self.mw
+        else:
+            pass
         
-
-
     def test_input_values(self):
         "function that tests if entered email and password are correct"
         if self.input_email.text():
             self.verif_email= True
-            self.submitted_email.emit(self.input_email.text())
+            self.openMainWindow()
         else:
             self.verif_email = False
             qtw.QMessageBox.warning(self,'Warning','The email cannot be blank')
         if self.input_password.text():
             self.verif_password = True
-            self.submitted_password.emit(self.input_password.text())
             self.openMainWindow()
-            self.close()
         else:
             self.verif_password = False
             qtw.QMessageBox.warning(self,'Warning','The password cannot be blank')
