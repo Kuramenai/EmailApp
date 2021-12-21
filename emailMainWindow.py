@@ -1,5 +1,8 @@
 import sys
 import smtplib
+import imaplib
+import email
+from typing import Text
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
@@ -17,8 +20,14 @@ class MainWindow(qtw.QMainWindow):
         self.winHeight = 900
         self.setFixedSize(self.winWidth,self.winHeight)
 
+        #Create the server
+        self.host = 'imap.gmail.com'
+        self.server = self.host
+        self.mail  = imaplib.IMAP4_SSL(self.server)
+        self.login = False
+       
         #存储邮件账户与密码
-        self.email = email
+        self.my_email = email
         self.password = password
         self.email_label = qtw.QLabel(email)
         self.password_label = qtw.QLabel(password)
@@ -71,7 +80,7 @@ class MainWindow(qtw.QMainWindow):
         self.right_widget.addTab(self.account_tab, '')
 
        # 下面这段代码隐藏了标签部件的标签并初始化显示页面
-        self.right_widget.setCurrentIndex(1)
+        self.right_widget.setCurrentIndex(2)
         self.right_widget.setStyleSheet('''QTabBar::tab{width: 0; \ height: 0; margin: 0; padding: 0; border: none;}''')
 
         #Defines the main layout
@@ -98,6 +107,19 @@ class MainWindow(qtw.QMainWindow):
     def btn_account_function(self):
         "Opens the account tab"
         self.right_widget.setCurrentIndex(3)
+
+    def login_in(self):
+        "Test if user has been logging in"
+        #print('step2')
+        try:
+            if (self.login == False):
+                self.mail.login(self.my_email,self.password)
+                #print('step2"')
+                self.login = True
+        except Exception as error:
+            print(error)
+            self.login = False
+
     def send_function(self):
         "Implement the sending function"
         try:
@@ -106,14 +128,72 @@ class MainWindow(qtw.QMainWindow):
                 return
             else: 
                 message2Send = 'Subject: {}\n\n{}'.format(self.subject.text(),self.body.toPlainText())
-                server = smtplib.SMTP('smtp.gmail.com',587)
+                server = smtplib.SMTP('smtp.gmail.com',587)#'smtp.gmail.com',587
                 server.starttls()
-                server.login(self.email,self.password)
-                server.sendmail(self.email,self.receiver.text(),message2Send)
+                server.login(self.my_email,self.password)
+                server.sendmail(self.my_email,self.receiver.text(),message2Send)
                 print("Message Sent")
-        except:
-             print("Message Not Sent")
+        except Exception as error:
+            print(error)
+            print("Message Not Sent")
+
+    def check_for_new_mails(self):
+        "Check if there are new emails"
+        #print('step3')
+        self.login_in()
+        if self.login:
+            self.mail.select('inbox')
+            _, search_data = self.mail.search(None,'UNSEEN')
+            my_messages  = []
+            for num in search_data[0].split():
+                
+                email_data = {}
+
+                _, data = self.mail.fetch(num,"RFC822")
+                _,b = data[0]
+                email_message = email.message_from_bytes(b)
+                
+                for header in ['subject','to','from','date']:
+                    #print("{}:{}".format(header,email_message[header]))
+                    email_data[header] = email_message[header]
+
+                for part in email_message.walk():
+                    if part.get_content_type() == 'text/plain':
+                        body = part.get_payload(decode= True)
+                        email_data[body] = body.decode()
+                        #print(body.decode())
+                    elif part.get_content_type() == 'text/html':
+                        body = part.get_payload(decode= True)
+                        email_data[body] = body.decode()
+                       # print(body.decode())
+                my_messages.append(email_data)
             
+            mails_list = qtw.QListWidget()
+            test_list = [1,2,3]
+            if test_list:
+                for num in test_list:
+                    listWidgetItem = qtw.QListWidgetItem("Email")
+                    mails_list.addItem(listWidgetItem)
+            return mails_list
+                
+     
+
+    def display_emails(self):
+        "Function that will help display the email"
+        mails_list = qtw.QListWidget()
+        test_list = [1,2,3]
+        received_emails = self.check_for_new_mails()
+        if test_list:
+            for num in test_list:
+                listWidgetItem = qtw.QListWidgetItem("GeeksForGeeks")
+                mails_list.addItem(listWidgetItem)
+
+
+    def refresh_function(self):
+        pass
+        #print("step1")
+        #self.check_for_new_mails()
+
     def new_email_tab(self):
         "Layout for the email tab"
          #create the layout for this tab
@@ -165,8 +245,31 @@ class MainWindow(qtw.QMainWindow):
     def inbox_tab(self):
         "Layout for the inbox tab"
         main_layout = qtw.QVBoxLayout()
-        main_layout.addWidget(qtw.QLabel('page 3'))
+        header_layout = qtw.QHBoxLayout()
+        #Create the Refresh and Select Button
+        refresh_button = qtw.QPushButton("Refresh")
+        refresh_button.clicked.connect(self.check_for_new_mails)
+        search_button = qtw.QPushButton("Search")
+        #select_button.clicked.connect(self.search_function)
+        select_button = qtw.QPushButton("Select")
+        #select_button.clicked.connect(self.select_function)
+        self.search =  qtw.QLineEdit(self,clearButtonEnabled = 0,placeholderText = "Search")
+        header_layout.addWidget(self.search)
+        header_layout.addWidget(search_button)
+        header_layout.addWidget(search_button)
+        header_layout.addWidget(refresh_button)
+        header_layout.addWidget(select_button)
+         #
+        #header_layout.addStretch(5)
+        #header_layout.addSpacing(20)
+        #
+        main_layout.addLayout(header_layout)
+
+        mails_list = self.check_for_new_mails()
+        main_layout.addWidget(mails_list)
+
         main_layout.addStretch(5)
+
         main = qtw.QWidget()
         main.setLayout(main_layout)
         return main
@@ -182,7 +285,7 @@ class MainWindow(qtw.QMainWindow):
 
 if __name__ == '__main__':
     app = qtw.QApplication(sys.argv)
-    mw = MainWindow('alkanstephen@gmail.com','12333')
+    mw = MainWindow('alkanstephen@gmail.com','MSC102hynix5*ULTRA')
     sys.exit(app.exec()) 
 
 
