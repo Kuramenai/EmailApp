@@ -44,7 +44,7 @@ class MainWindow(qtw.QMainWindow):
         self.inbox_button.clicked.connect(self.btn_inbox_function)
         self.account_button.clicked.connect(self.btn_account_function)
 
-        #Create a tab for when every button is pressed
+        #Create a tab for when each sidebar button is pressed
         self.new_email_tab = self.new_email_tab()
         self.sent_tab = self.sent_tab()
         self.inbox_tab  = self.inbox_tab()
@@ -167,32 +167,35 @@ class MainWindow(qtw.QMainWindow):
                         email_data[body] = body.decode()
                        # print(body.decode())
                 my_messages.append(email_data)
-            
-            mails_list = qtw.QListWidget()
-            test_list = [1,2,3]
-            if test_list:
-                for num in test_list:
-                    listWidgetItem = qtw.QListWidgetItem("Email")
-                    mails_list.addItem(listWidgetItem)
-            return mails_list
-                
-     
-
-    def display_emails(self):
-        "Function that will help display the email"
-        mails_list = qtw.QListWidget()
-        test_list = [1,2,3]
-        received_emails = self.check_for_new_mails()
-        if test_list:
-            for num in test_list:
-                listWidgetItem = qtw.QListWidgetItem("GeeksForGeeks")
-                mails_list.addItem(listWidgetItem)
-
+            return my_messages
+    
+    def display_emails_list(self):
+        "Display emails in the inbox tab"
+        my_messages = self.check_for_new_mails()
+        my_messages.reverse()
+        self.mails_list = qtw.QListWidget()
+        if my_messages:
+            for email_data in my_messages:
+                item_title = f"From : {email_data['from'] } \nSubject : {email_data['subject']}\nDate : {email_data['date']}"
+                item = qtw.QListWidgetItem(item_title)
+                self.mails_list.addItem(item)
+        else:
+            print("no new emails")
+        return self.mails_list
 
     def refresh_function(self):
-        pass
-        #print("step1")
-        #self.check_for_new_mails()
+        "Function to display to new emails if there are"
+        my_messages = self.check_for_new_mails()
+        my_messages.reverse()
+        if my_messages:
+            for email_data in my_messages:
+                item_title = f"From : {email_data['from'] } \nSubject : {email_data['subject']}\nDate : {email_data['date']}"
+                item = qtw.QListWidgetItem(item_title)
+                self.mails_list.addItem(item)
+            self.inbox_layout.replaceWidget(self.mails_list,self.mails_list)
+        else:
+            print("no new emails")
+        
 
     def new_email_tab(self):
         "Layout for the email tab"
@@ -220,15 +223,11 @@ class MainWindow(qtw.QMainWindow):
         #Adding the buttons to the layout
         header_layout.addWidget(insert_button)
         header_layout.addWidget(send_button)
-        #
-        #header_layout.addStretch(50)
-        #header_layout.addSpacing(200)
-        #
+        
         main_layout.addLayout(header_layout)
         main_layout.addWidget(from_label)
         main_layout.addLayout(form_layout)
         main_layout.addWidget(self.body)
-        main_layout.addStretch(5)
         main = qtw.QWidget()
         main.setLayout(main_layout)
         return main
@@ -244,34 +243,29 @@ class MainWindow(qtw.QMainWindow):
         
     def inbox_tab(self):
         "Layout for the inbox tab"
-        main_layout = qtw.QVBoxLayout()
+        self.inbox_layout = qtw.QVBoxLayout()
         header_layout = qtw.QHBoxLayout()
         #Create the Refresh and Select Button
         refresh_button = qtw.QPushButton("Refresh")
-        refresh_button.clicked.connect(self.check_for_new_mails)
+        refresh_button.clicked.connect(self.refresh_function)
         search_button = qtw.QPushButton("Search")
         #select_button.clicked.connect(self.search_function)
         select_button = qtw.QPushButton("Select")
         #select_button.clicked.connect(self.select_function)
-        self.search =  qtw.QLineEdit(self,clearButtonEnabled = 0,placeholderText = "Search")
+        self.search =  qtw.QLineEdit(self,clearButtonEnabled = 0,placeholderText = "Search for emails")
         header_layout.addWidget(self.search)
         header_layout.addWidget(search_button)
-        header_layout.addWidget(search_button)
+        header_layout.addSpacing(50)
         header_layout.addWidget(refresh_button)
         header_layout.addWidget(select_button)
-         #
-        #header_layout.addStretch(5)
-        #header_layout.addSpacing(20)
-        #
-        main_layout.addLayout(header_layout)
-
-        mails_list = self.check_for_new_mails()
-        main_layout.addWidget(mails_list)
-
-        main_layout.addStretch(5)
+        
+        self.inbox_layout.addLayout(header_layout)
+        
+        mails_list = self.display_emails_list()
+        self.inbox_layout.addWidget(mails_list)
 
         main = qtw.QWidget()
-        main.setLayout(main_layout)
+        main.setLayout(self.inbox_layout)
         return main
 
     def account_tab(self):
