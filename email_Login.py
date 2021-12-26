@@ -2,6 +2,7 @@ import sys
 import smtplib
 import imaplib
 import smtplib
+from email.mime.text import MIMEText
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
@@ -24,16 +25,18 @@ class EmailLoginWindow(qtw.QWidget):
         self.setLayout(layout)
 
         #IMAP Server for Gmail
-        #Create the server
         self.host = 'imap.gmail.com'
         self.server = self.host
         self.mail  = imaplib.IMAP4_SSL(self.server)
 
         #IMAP Server for QQ
-        #Create the server
-        self.mail_qq  = imaplib.IMAP4_SSL('imap.qq.com')
+        self.mail_qq  = imaplib.IMAP4_SSL('imap.qq.com',993)
+
+        #Global SMTP
+        self.server_SMPTP = smtplib.SMTP()
 
         #flag to open main window
+        self.imap_server = ''
         self.verif_email = False
         self.verif_password = False
         self.login_IMAP = False
@@ -82,11 +85,15 @@ class EmailLoginWindow(qtw.QWidget):
             if self.gmail.isChecked():
                 if (self.login_IMAP == False):
                     self.mail.login(self.input_email.text(),self.input_password.text())
+                    self.imap_server = self.mail
                     self.login_IMAP = True
+                    
             elif self.qq.isChecked():
                 if (self.login_IMAP == False):
                     self.mail_qq.login(self.input_email.text(),self.input_password.text())
-                    self.login_IMAP = True    
+                    self.imap_server = self.mail_qq
+                    self.login_IMAP = True   
+                    
             else:
                 qtw.QMessageBox.warning(self,'Warning','Please an email provider')
         except Exception as error:
@@ -103,9 +110,8 @@ class EmailLoginWindow(qtw.QWidget):
                     self.server_SMPTP.login(self.input_email.text(),self.input_password.text())
                     self.login_SMTP = True
             elif self.qq.isChecked():
-                 if (self.login_IMAP == False):
+                 if (self.login_SMTP == False):
                     self.server_SMPTP = smtplib.SMTP_SSL('smtp.qq.com', smtplib.SMTP_SSL_PORT)
-                    self.server_SMPTP.starttls()
                     self.server_SMPTP.login(self.input_email.text(),self.input_password.text())
                     self.login_SMTP = True
                 
@@ -125,7 +131,7 @@ class EmailLoginWindow(qtw.QWidget):
             print(self.login_SMTP)
             print(self.login_SMTP)
             if self.login_SMTP and self.login_IMAP :
-                self.mw = MainWindow(self.input_email.text(),self.input_password.text(),self.mail,self.server_SMPTP)
+                self.mw = MainWindow(self.input_email.text(),self.input_password.text(),self.imap_server,self.server_SMPTP)
                 self.close()
                 self.mw.show()
         else:

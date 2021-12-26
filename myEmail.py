@@ -1,5 +1,7 @@
 import sys
 import smtplib
+import imaplib
+from email.mime.text import MIMEText
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
@@ -10,6 +12,7 @@ from emailMainWindow  import MainWindow
 if __name__ == '__main__':
     app = qtw.QApplication(sys.argv)
     elw = EmailLoginWindow()
-    sys.exit(app.exec()) 
+    sys.exit(app.exec())
+    
      
 
