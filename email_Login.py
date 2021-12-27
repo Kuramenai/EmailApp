@@ -2,6 +2,7 @@ import sys
 import smtplib
 import imaplib
 import smtplib
+import email
 from email.mime.text import MIMEText
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtGui as qtg

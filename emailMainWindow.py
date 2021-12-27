@@ -115,6 +115,14 @@ class MainWindow(qtw.QMainWindow):
         self.server.close()
         self.mail.logout()
         qtw.QMessageBox.information(self,'Notification','Logging Out...')
+    
+    def my_unicode(s, encoding):
+      if encoding:
+            return str(s, encoding)
+      else:
+            return (s)
+
+    
 
     def update_tab(self):
         "Function that updates the tabs layout when there are new changes"
@@ -179,10 +187,33 @@ class MainWindow(qtw.QMainWindow):
             _, data = self.mail.fetch(num,"RFC822")
             _,b = data[0]
             email_message = email.message_from_bytes(b)
+
+            Sender = email_message['from'].split()
+            if len(Sender) == 2 :
+                sender_name = email.header.decode_header((Sender[0]).strip('\"'))
+                sender_name = self.my_unicode(sender_name[0][0], sender_name[0][1]) + Sender[1]
+            else:
+                sender_name = email_message['from']
             
-            for header in ['subject','to','from','date']:
-                #print("{}:{}".format(header,email_message[header]))
-                email_data[header] = email_message[header]
+            subject,encoding = email.header.decode_header(email_message['subject'])[0]
+            #print(subject.decode(encoding))
+
+            string= 'v'
+            bit   = b''
+            ty1 = type(string)
+            ty2 = type(bit)
+
+
+            if type(subject) == ty1:
+                email_data['subject'] = subject
+            elif type(subject) == ty2:
+                email_data['subject'] = subject.decode(encoding)
+
+                
+            email_data['to'] =  email_message['to']
+            email_data['from'] =  sender_name
+            email_data['date']   = email_message['date']
+
 
             for part in email_message.walk():
                 if part.get_content_type() == 'text/plain':
