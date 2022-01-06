@@ -3,13 +3,17 @@ import smtplib
 import imaplib
 import smtplib
 import email
+from email import encoders
 from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
 from qtwidgets import PasswordEdit
 from emailMainWindow  import MainWindow
 
+#self.input_password =  qtw.QLineEdit(self,clearButtonEnabled = 1,placeholderText = "Please input your password here").setEchoMode(qtw.QLineEdit.Password)
 
 class EmailLoginWindow(qtw.QWidget):
 
@@ -45,10 +49,8 @@ class EmailLoginWindow(qtw.QWidget):
 
         #存储邮件账户与密码的变量
         self.input_email    =  qtw.QLineEdit(self,clearButtonEnabled = 1,placeholderText = "Please input your email here")
-        #self.input_password =  qtw.QLineEdit(self,clearButtonEnabled = 1,placeholderText = "Please input your password here").setEchoMode(qtw.QLineEdit.Password)
         self.input_password = PasswordEdit(self,clearButtonEnabled = 1,placeholderText = "Please input your password here" )
         
-
         #Create layout form for this window 
         form_layout = qtw.QFormLayout()
         form_layout.setFormAlignment(qtc.Qt.AlignCenter)
@@ -122,7 +124,6 @@ class EmailLoginWindow(qtw.QWidget):
         except Exception as error:
             qtw.QMessageBox.warning(self,'Error Login',f'{str(error)}\nPlease be sure your email and password are corrrect')
             self.login_SMTP = False
-
 
     def openMainWindow(self):
         "Opens MainWindow"
